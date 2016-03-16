@@ -18,6 +18,18 @@ class CallViewController: NSViewController {
     
     @IBOutlet weak var callButton: NSButton!
     
+    var effects: [VideoEffect?] = [
+        nil,
+        Blur(radius: 10),
+        Monochrome(color: NSColor(calibratedRed:1, green:0.41, blue:0.71, alpha:1))
+    ]
+    
+    var selectedEffectTag: Int = 0 {
+        didSet {
+            captureController.effect = effects[selectedEffectTag]
+        }
+    }
+    
     let captureController = CaptureController()
     let playbackController = PlaybackController(url: NSBundle.mainBundle().URLForResource("Saw", withExtension: "mp4")!)
 
@@ -25,7 +37,6 @@ class CallViewController: NSViewController {
         super.viewDidLoad()
 
         captureController.delegate = self
-        captureController.effect = Blur(radius: 20)
         
         playbackView.player = playbackController.player
         
@@ -101,5 +112,5 @@ extension CallViewController {
         overlayView.transient = false
         callButton.action = "startCall:"
     }
-    
+
 }

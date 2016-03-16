@@ -31,11 +31,12 @@
 		0A6D21081C9802B000085A7F /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6D21071C9802B000085A7F /* Errors.swift */; };
 		0A6D210A1C980F5E00085A7F /* Saw.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 0A6D21091C980EA000085A7F /* Saw.mp4 */; };
 		0A6D210C1C983E5000085A7F /* CallButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6D210B1C983E5000085A7F /* CallButton.swift */; };
-		0A6D210F1C9847AF00085A7F /* RoundPopUpButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6D210E1C9847AF00085A7F /* RoundPopUpButton.swift */; };
+		0A6D210F1C9847AF00085A7F /* EffectsButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6D210E1C9847AF00085A7F /* EffectsButton.swift */; };
 		0AA13ABC1C997EF800C4BE3B /* VideoEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA13ABB1C997EF800C4BE3B /* VideoEffect.swift */; };
 		0AA13ABE1C997F6700C4BE3B /* Blur.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA13ABD1C997F6700C4BE3B /* Blur.swift */; };
 		0AA13AC11C99AB6000C4BE3B /* NSFileManager+TemporaryURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA13AC01C99AB6000C4BE3B /* NSFileManager+TemporaryURL.swift */; };
 		0AA13AC41C99AEC300C4BE3B /* CaptureMovieFileWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA13AC31C99AEC300C4BE3B /* CaptureMovieFileWriter.swift */; };
+		0AA13AC61C99DDC100C4BE3B /* Monochrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA13AC51C99DDC100C4BE3B /* Monochrome.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -65,11 +66,12 @@
 		0A6D21071C9802B000085A7F /* Errors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
 		0A6D21091C980EA000085A7F /* Saw.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = Saw.mp4; sourceTree = "<group>"; };
 		0A6D210B1C983E5000085A7F /* CallButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallButton.swift; sourceTree = "<group>"; };
-		0A6D210E1C9847AF00085A7F /* RoundPopUpButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RoundPopUpButton.swift; sourceTree = "<group>"; };
+		0A6D210E1C9847AF00085A7F /* EffectsButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EffectsButton.swift; sourceTree = "<group>"; };
 		0AA13ABB1C997EF800C4BE3B /* VideoEffect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoEffect.swift; sourceTree = "<group>"; };
 		0AA13ABD1C997F6700C4BE3B /* Blur.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Blur.swift; sourceTree = "<group>"; };
 		0AA13AC01C99AB6000C4BE3B /* NSFileManager+TemporaryURL.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSFileManager+TemporaryURL.swift"; sourceTree = "<group>"; };
 		0AA13AC31C99AEC300C4BE3B /* CaptureMovieFileWriter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CaptureMovieFileWriter.swift; sourceTree = "<group>"; };
+		0AA13AC51C99DDC100C4BE3B /* Monochrome.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Monochrome.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -133,7 +135,7 @@
 				0A6D20E81C96C01F00085A7F /* OverlayView.swift */,
 				0A6D20EE1C97019700085A7F /* PiPView.swift */,
 				0A6D20E41C96A06800085A7F /* PlaybackView.swift */,
-				0A6D210E1C9847AF00085A7F /* RoundPopUpButton.swift */,
+				0A6D210E1C9847AF00085A7F /* EffectsButton.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -200,8 +202,9 @@
 		0AA13ABA1C997EC700C4BE3B /* Effects */ = {
 			isa = PBXGroup;
 			children = (
-				0AA13ABD1C997F6700C4BE3B /* Blur.swift */,
 				0AA13ABB1C997EF800C4BE3B /* VideoEffect.swift */,
+				0AA13ABD1C997F6700C4BE3B /* Blur.swift */,
+				0AA13AC51C99DDC100C4BE3B /* Monochrome.swift */,
 			);
 			path = Effects;
 			sourceTree = "<group>";
@@ -306,7 +309,7 @@
 				0AA13AC41C99AEC300C4BE3B /* CaptureMovieFileWriter.swift in Sources */,
 				0A6D210C1C983E5000085A7F /* CallButton.swift in Sources */,
 				0A6D20E71C96AD6300085A7F /* LayerBackedView.swift in Sources */,
-				0A6D210F1C9847AF00085A7F /* RoundPopUpButton.swift in Sources */,
+				0A6D210F1C9847AF00085A7F /* EffectsButton.swift in Sources */,
 				0AA13ABC1C997EF800C4BE3B /* VideoEffect.swift in Sources */,
 				0A6D20E11C969CD600085A7F /* CaptureView.swift in Sources */,
 				0A6D20E91C96C01F00085A7F /* OverlayView.swift in Sources */,
@@ -317,6 +320,7 @@
 				0A6D20EB1C96CD2C00085A7F /* CallWindowController.swift in Sources */,
 				0A6D20F11C97264500085A7F /* NSCursor+SystemCursors.swift in Sources */,
 				0A6D20E51C96A06800085A7F /* PlaybackView.swift in Sources */,
+				0AA13AC61C99DDC100C4BE3B /* Monochrome.swift in Sources */,
 				0AA13ABE1C997F6700C4BE3B /* Blur.swift in Sources */,
 				0A6D20EF1C97019700085A7F /* PiPView.swift in Sources */,
 				0A6D20CF1C96971000085A7F /* AppDelegate.swift in Sources */,

@@ -24,7 +24,7 @@ protocol SimpleCIFilterVideoEffect: VideoEffect {
 extension SimpleCIFilterVideoEffect {
     
     func apply(sourceImage: CIImage) -> CIImage {
-        filter.setValue(sourceImage, forKey: "inputImage")
+        filter.setValue(sourceImage, forKey: kCIInputImageKey)
         
         return filter.outputImage!
     }
