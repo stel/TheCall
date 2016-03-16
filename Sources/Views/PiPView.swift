@@ -43,8 +43,6 @@ class PiPView: LayerBackedView {
         let conteinerSize = secondaryViewContainer.frame.size
         
         return NSSize(width: conteinerSize.width, height: conteinerSize.width / contentAspectRatio.width * contentAspectRatio.height)
-        
-//        return secondaryViewContainer.frame.size
     }
     
     func showSecondaryView() {

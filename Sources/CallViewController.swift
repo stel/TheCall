@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import AVFoundation
 
 class CallViewController: NSViewController {
     
@@ -17,6 +18,18 @@ class CallViewController: NSViewController {
     
     @IBOutlet weak var callButton: NSButton!
     
+    var effects: [VideoEffect?] = [
+        nil,
+        Blur(radius: 10),
+        Monochrome(color: NSColor(calibratedRed:1, green:0.41, blue:0.71, alpha:1))
+    ]
+    
+    var selectedEffectTag: Int = 0 {
+        didSet {
+            captureController.effect = effects[selectedEffectTag]
+        }
+    }
+    
     let captureController = CaptureController()
     let playbackController = PlaybackController(url: NSBundle.mainBundle().URLForResource("Saw", withExtension: "mp4")!)
 
@@ -25,10 +38,9 @@ class CallViewController: NSViewController {
 
         captureController.delegate = self
         
-        captureView.session = captureController.session
         playbackView.player = playbackController.player
         
-        // Will use 16:9 for that demo app
+        // TODO: grab ratio from CaptureController
         pipView.contentAspectRatio = NSSize(width: 16, height: 9)
     }
     
@@ -43,6 +55,10 @@ class CallViewController: NSViewController {
 
 extension CallViewController: CaptureControllerDelegate {
     
+    func captureController(controller: CaptureController, didCaptureFrame image: CIImage) {
+        captureView.image = image
+    }
+    
     func captureController(controller: CaptureController, didFinishRecordingWithError error: NSError?) {
         let alert = NSAlert()
         
@@ -55,7 +71,7 @@ extension CallViewController: CaptureControllerDelegate {
             if result == NSAlertFirstButtonReturn {
                 let savePanel = NSSavePanel()
                 
-                savePanel.allowedFileTypes = [".mov"]
+                savePanel.allowedFileTypes = ["mp4"]
                 
                 savePanel.beginSheetModalForWindow(self.view.window!) { result in
                     if let url = savePanel.URL where result == NSModalResponseOK {
@@ -96,5 +112,5 @@ extension CallViewController {
         overlayView.transient = false
         callButton.action = "startCall:"
     }
-    
+
 }

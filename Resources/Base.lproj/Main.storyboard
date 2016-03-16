@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="9532" systemVersion="15E61b" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
+        <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9532"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
     </dependencies>
@@ -703,24 +704,29 @@
                                             <action selector="startCall:" target="XfG-lQ-9wD" id="gOy-nX-ESN"/>
                                         </connections>
                                     </button>
-                                    <popUpButton translatesAutoresizingMaskIntoConstraints="NO" id="fA0-fZ-AJT" customClass="RoundPopUpButton" customModule="TheCall" customModuleProvider="target">
+                                    <popUpButton translatesAutoresizingMaskIntoConstraints="NO" id="fA0-fZ-AJT" customClass="EffectsButton" customModule="TheCall" customModuleProvider="target">
                                         <rect key="frame" x="331" y="30" width="40" height="40"/>
                                         <constraints>
                                             <constraint firstAttribute="width" constant="40" id="6t7-Q8-9pI"/>
                                             <constraint firstAttribute="height" constant="40" id="i2l-MW-jnX"/>
                                         </constraints>
-                                        <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="only" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" arrowPosition="noArrow" autoenablesItems="NO" altersStateOfSelectedItem="NO" selectedItem="LiX-Rb-CBJ" id="hcf-8t-lfH">
+                                        <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="only" alignment="left" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" arrowPosition="noArrow" preferredEdge="maxX" autoenablesItems="NO" id="hcf-8t-lfH">
                                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                             <font key="font" metaFont="menu"/>
                                             <menu key="menu" autoenablesItems="NO" id="BCd-ci-P8D">
                                                 <items>
-                                                    <menuItem state="on" image="effects" hidden="YES" id="LiX-Rb-CBJ" userLabel="None"/>
                                                     <menuItem title="None" id="M2r-Wp-HZu" userLabel="None"/>
                                                     <menuItem isSeparatorItem="YES" id="D5i-0m-zne"/>
-                                                    <menuItem title="Effect #1" id="TW7-KD-crS"/>
-                                                    <menuItem title="Effect #2" id="bQ1-aH-daJ"/>
+                                                    <menuItem title="Drunk Glasses" tag="1" id="TW7-KD-crS"/>
+                                                    <menuItem title="Pink Glasses" tag="2" id="bQ1-aH-daJ"/>
                                                 </items>
+                                                <connections>
+                                                    <outlet property="delegate" destination="XfG-lQ-9wD" id="Ync-Wc-wqi"/>
+                                                </connections>
                                             </menu>
+                                            <connections>
+                                                <binding destination="XfG-lQ-9wD" name="selectedTag" keyPath="selectedEffectTag" id="Lhn-m4-hb2"/>
+                                            </connections>
                                         </popUpButtonCell>
                                     </popUpButton>
                                 </subviews>
@@ -778,7 +784,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="effects" width="128" height="128"/>
         <image name="endCall" width="128" height="128"/>
         <image name="startCall" width="128" height="128"/>
     </resources>

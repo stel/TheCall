@@ -1,14 +1,16 @@
 //
-//  RoundButton.swift
+//  EffectsButton.swift
 //  TheCall
 //
-//  Created by Dmitry Obukhov on 15/03/16.
+//  Created by Dmitry Obukhov on 16/03/16.
 //  Copyright © 2016 Dmitry Obukhov. All rights reserved.
 //
 
 import Cocoa
 
-class RoundPopUpButton: NSPopUpButton {
+class EffectsButton: NSPopUpButton {
+    
+    private let coverImage = NSImage(named: "effects")
 
     override func drawRect(dirtyRect: NSRect) {
         let path = NSBezierPath(ovalInRect: bounds)
@@ -20,7 +22,7 @@ class RoundPopUpButton: NSPopUpButton {
         }
         
         path.fill()
-        image?.drawInRect(bounds)
+        coverImage?.drawInRect(bounds)
     }
     
 }
