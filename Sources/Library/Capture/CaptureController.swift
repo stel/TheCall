@@ -171,7 +171,11 @@ extension CaptureController: AVCaptureVideoDataOutputSampleBufferDelegate, AVCap
             return
         }
         
-        let resultImage = effect!.apply(CIImage(CVPixelBuffer: imageBuffer))
+        var resultImage = (CIImage(CVPixelBuffer: imageBuffer))
+        
+        if let effect = effect {
+            resultImage = effect.apply(resultImage)
+        }
         
         delegate?.captureController(self, didCaptureFrame: resultImage)
         
