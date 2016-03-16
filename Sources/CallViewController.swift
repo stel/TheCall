@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import AVFoundation
 
 class CallViewController: NSViewController {
     
@@ -25,7 +26,7 @@ class CallViewController: NSViewController {
 
         captureController.delegate = self
         
-        captureView.session = captureController.session
+//        captureView.session = captureController.session
         playbackView.player = playbackController.player
         
         // Will use 16:9 for that demo app
@@ -43,6 +44,12 @@ class CallViewController: NSViewController {
 
 extension CallViewController: CaptureControllerDelegate {
     
+    func captureController(controller: CaptureController, didOutputSampleBuffer buffer: CMSampleBuffer) {
+        if let imageBuffer = CMSampleBufferGetImageBuffer(buffer) {
+            captureView.image = CIImage(CVPixelBuffer: imageBuffer)
+        }
+    }
+    
     func captureController(controller: CaptureController, didFinishRecordingWithError error: NSError?) {
         let alert = NSAlert()
         
@@ -55,7 +62,7 @@ extension CallViewController: CaptureControllerDelegate {
             if result == NSAlertFirstButtonReturn {
                 let savePanel = NSSavePanel()
                 
-                savePanel.allowedFileTypes = [".mov"]
+                savePanel.allowedFileTypes = ["mov"]
                 
                 savePanel.beginSheetModalForWindow(self.view.window!) { result in
                     if let url = savePanel.URL where result == NSModalResponseOK {

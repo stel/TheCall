@@ -12,6 +12,7 @@ import AVFoundation
 protocol CaptureControllerDelegate: class {
     
     func captureController(controller: CaptureController, didFinishRecordingWithError error: NSError?)
+    func captureController(controller: CaptureController, didOutputSampleBuffer buffer: CMSampleBuffer)
     
 }
 
@@ -19,35 +20,44 @@ class CaptureController: NSObject {
     
     weak var delegate: CaptureControllerDelegate?
     
-    let session = AVCaptureSession()
+    private(set) var recording = false
     
-    var recording: Bool {
-        return videoOutput.recording
-    }
+    private let session = AVCaptureSession()
     
-    private let videoOutput = AVCaptureMovieFileOutput()
-    private let audioOutput = AVCaptureAudioPreviewOutput()
-    
-    private var temporaryOutputFileURL: NSURL?
+    private var assetWriter: AVAssetWriter?
     
     override init() {
         super.init()
         
-        videoOutput.delegate = self
-        
         session.beginConfiguration()
         
         do {
-            session.addInput(try AVCaptureDeviceInput(device: AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)))
-            session.addInput(try AVCaptureDeviceInput(device: AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeAudio)))
-        } catch {
-            BlueScreenOfDeath.show(reason: "Some default input devices are missing")
+            let videoDeviceInput = try AVCaptureDeviceInput(device: AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo))
+            
+            assert(session.canAddInput(videoDeviceInput))
+            session.addInput(videoDeviceInput)
+            
+            let audioDeviceInput = try AVCaptureDeviceInput(device: AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeAudio))
+            
+            assert(session.canAddInput(audioDeviceInput))
+            session.addInput(audioDeviceInput)
+        } catch let error as NSError {
+            BlueScreenOfDeath.show(reason: "Some default input devices are missing: \(error.localizedDescription)")
         }
         
+        let videoOutput = AVCaptureVideoDataOutput()
+        videoOutput.setSampleBufferDelegate(self, queue: dispatch_get_main_queue())
+        
+        assert(session.canAddOutput(videoOutput))
         session.addOutput(videoOutput)
+        
+        let audioOutput = AVCaptureAudioPreviewOutput()
+
+        assert(session.canAddOutput(audioOutput))
         session.addOutput(audioOutput)
         
         session.commitConfiguration()
+        
         session.startRunning()
     }
     
@@ -64,17 +74,43 @@ class CaptureController: NSObject {
         
         cleanup()
         
-        temporaryOutputFileURL = NSFileManager.defaultManager().applicationTemporaryUniqueFileURL()
+        do {
+            let writer = try AVAssetWriter(URL: NSFileManager.defaultManager().applicationTemporaryUniqueFileURL(), fileType: AVFileTypeQuickTimeMovie)
+            
+            let videoInput = AVAssetWriterInput(mediaType: AVMediaTypeVideo, outputSettings: nil)
+            videoInput.expectsMediaDataInRealTime = true
+            
+            assert(writer.canAddInput(videoInput))
+            writer.addInput(videoInput)
+            
+            assetWriter = writer
+        } catch let error as NSError {
+            BlueScreenOfDeath.show(reason: "Can't create asset writer: \(error.localizedDescription)")
+        }
         
-        videoOutput.startRecordingToOutputFileURL(temporaryOutputFileURL, recordingDelegate: self)
+        recording = true
     }
     
     func stopRecording() {
-        videoOutput.stopRecording()
+        recording = false
+        
+        guard let writer = assetWriter else {
+            return
+        }
+        
+        for input in writer.inputs {
+            input.markAsFinished()
+        }
+        
+        writer.finishWritingWithCompletionHandler {
+            dispatch_async(dispatch_get_main_queue()) {
+                self.delegate?.captureController(self, didFinishRecordingWithError: self.assetWriter?.error)
+            }
+        }
     }
     
     func exportRecording(destinationURL: NSURL) throws {
-        guard let sourceUrl = temporaryOutputFileURL else {
+        guard let sourceUrl = assetWriter?.outputURL else {
             return
         }
         
@@ -86,7 +122,9 @@ class CaptureController: NSObject {
     }
     
     func cleanup() {
-        if let url = temporaryOutputFileURL {
+        precondition(!recording)
+        
+        if let url = assetWriter?.outputURL {
             do {
                 try NSFileManager.defaultManager().removeItemAtURL(url)
             } catch {
@@ -94,25 +132,28 @@ class CaptureController: NSObject {
             }
         }
         
-        temporaryOutputFileURL = nil
+        assetWriter = nil
     }
 
 }
 
-extension CaptureController: AVCaptureFileOutputDelegate {
-    
-    func captureOutputShouldProvideSampleAccurateRecordingStart(captureOutput: AVCaptureOutput!) -> Bool {
-        return false
-    }
-    
-}
+extension CaptureController: AVCaptureVideoDataOutputSampleBufferDelegate {
 
-extension CaptureController: AVCaptureFileOutputRecordingDelegate {
-    
-    func captureOutput(captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAtURL outputFileURL: NSURL!, fromConnections connections: [AnyObject]!, error: NSError!) {
-        delegate?.captureController(self, didFinishRecordingWithError: error)
+    func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
+        delegate?.captureController(self, didOutputSampleBuffer: sampleBuffer)
+        
+        if let writer = assetWriter where recording {
+            if writer.status != .Writing {
+                writer.startWriting()
+                writer.startSessionAtSourceTime(CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
+            }
+            
+            for input in writer.inputs where input.mediaType == AVMediaTypeVideo {
+                input.appendSampleBuffer(sampleBuffer)
+            }
+        }
     }
-    
+
 }
 
 extension NSFileManager {
