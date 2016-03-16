@@ -62,7 +62,7 @@ extension CallViewController: CaptureControllerDelegate {
             if result == NSAlertFirstButtonReturn {
                 let savePanel = NSSavePanel()
                 
-                savePanel.allowedFileTypes = ["mov"]
+                savePanel.allowedFileTypes = ["mp4"]
                 
                 savePanel.beginSheetModalForWindow(self.view.window!) { result in
                     if let url = savePanel.URL where result == NSModalResponseOK {

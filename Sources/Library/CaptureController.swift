@@ -26,6 +26,12 @@ class CaptureController: NSObject {
     
     private var assetWriter: AVAssetWriter?
     
+    private let outputVideoSettings: [String: AnyObject] = [
+        AVVideoCodecKey: AVVideoCodecH264,
+        AVVideoWidthKey: 640,
+        AVVideoHeightKey: 360
+    ]
+    
     override init() {
         super.init()
         
@@ -75,9 +81,9 @@ class CaptureController: NSObject {
         cleanup()
         
         do {
-            let writer = try AVAssetWriter(URL: NSFileManager.defaultManager().applicationTemporaryUniqueFileURL(), fileType: AVFileTypeQuickTimeMovie)
+            let writer = try AVAssetWriter(URL: NSFileManager.defaultManager().applicationTemporaryUniqueFileURL(), fileType: AVFileTypeMPEG4)
             
-            let videoInput = AVAssetWriterInput(mediaType: AVMediaTypeVideo, outputSettings: nil)
+            let videoInput = AVAssetWriterInput(mediaType: AVMediaTypeVideo, outputSettings: outputVideoSettings)
             videoInput.expectsMediaDataInRealTime = true
             
             assert(writer.canAddInput(videoInput))
