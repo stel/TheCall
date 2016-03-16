@@ -25,11 +25,11 @@ class CallViewController: NSViewController {
         super.viewDidLoad()
 
         captureController.delegate = self
+        captureController.effect = Blur(radius: 20)
         
-//        captureView.session = captureController.session
         playbackView.player = playbackController.player
         
-        // Will use 16:9 for that demo app
+        // TODO: grab ratio from CaptureController
         pipView.contentAspectRatio = NSSize(width: 16, height: 9)
     }
     
@@ -44,10 +44,8 @@ class CallViewController: NSViewController {
 
 extension CallViewController: CaptureControllerDelegate {
     
-    func captureController(controller: CaptureController, didOutputSampleBuffer buffer: CMSampleBuffer) {
-        if let imageBuffer = CMSampleBufferGetImageBuffer(buffer) {
-            captureView.image = CIImage(CVPixelBuffer: imageBuffer)
-        }
+    func captureController(controller: CaptureController, didCaptureFrame image: CIImage) {
+        captureView.image = image
     }
     
     func captureController(controller: CaptureController, didFinishRecordingWithError error: NSError?) {

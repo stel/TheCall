@@ -12,7 +12,7 @@ import AVFoundation
 protocol CaptureControllerDelegate: class {
     
     func captureController(controller: CaptureController, didFinishRecordingWithError error: NSError?)
-    func captureController(controller: CaptureController, didOutputSampleBuffer buffer: CMSampleBuffer)
+    func captureController(controller: CaptureController, didCaptureFrame image: CIImage)
     
 }
 
@@ -20,30 +20,41 @@ class CaptureController: NSObject {
     
     weak var delegate: CaptureControllerDelegate?
     
-    private(set) var recording = false
+    var effect: VideoEffect?
+    
+    var recording: Bool {
+        return movieFileWriter?.writing ?? false
+    }
     
     private let session = AVCaptureSession()
     
-    private var assetWriter: AVAssetWriter?
+    private var inputVideoDimensions: NSSize
     
-    private let outputVideoSettings: [String: AnyObject] = [
-        AVVideoCodecKey: AVVideoCodecH264,
-        AVVideoWidthKey: 640,
-        AVVideoHeightKey: 360
-    ]
+    private var movieFileWriter: CaptureMovieFileWriter?
     
     override init() {
+        let videoDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
+        let audioDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeAudio)
+        
+        let dimensions = CMVideoFormatDescriptionGetDimensions(videoDevice.activeFormat.formatDescription)
+        
+        inputVideoDimensions = NSSize(width: Int(dimensions.width), height: Int(dimensions.height))
+        
         super.init()
+        
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "captureInputPortFormatDescriptionDidChange:", name: AVCaptureInputPortFormatDescriptionDidChangeNotification, object: nil)
         
         session.beginConfiguration()
         
+        session.sessionPreset = AVCaptureSessionPresetHigh
+        
         do {
-            let videoDeviceInput = try AVCaptureDeviceInput(device: AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo))
+            let videoDeviceInput = try AVCaptureDeviceInput(device: videoDevice)
             
             assert(session.canAddInput(videoDeviceInput))
             session.addInput(videoDeviceInput)
             
-            let audioDeviceInput = try AVCaptureDeviceInput(device: AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeAudio))
+            let audioDeviceInput = try AVCaptureDeviceInput(device: audioDevice)
             
             assert(session.canAddInput(audioDeviceInput))
             session.addInput(audioDeviceInput)
@@ -57,10 +68,12 @@ class CaptureController: NSObject {
         assert(session.canAddOutput(videoOutput))
         session.addOutput(videoOutput)
         
-        let audioOutput = AVCaptureAudioPreviewOutput()
-
-        assert(session.canAddOutput(audioOutput))
-        session.addOutput(audioOutput)
+        // TODO: Implement
+//        let audioOutput = AVCaptureAudioDataOutput()
+//        audioOutput.setSampleBufferDelegate(self, queue: dispatch_get_main_queue())
+//
+//        assert(session.canAddOutput(audioOutput))
+//        session.addOutput(audioOutput)
         
         session.commitConfiguration()
         
@@ -71,6 +84,18 @@ class CaptureController: NSObject {
         stopRecording()
         session.stopRunning()
         cleanup()
+        
+        NSNotificationCenter.defaultCenter().removeObserver(self)
+    }
+    
+    func captureInputPortFormatDescriptionDidChange(notification: NSNotification) {
+        if let inputPort = notification.object as? AVCaptureInputPort {
+            if inputPort.mediaType == AVMediaTypeVideo {
+                let dimensions = CMVideoFormatDescriptionGetDimensions(inputPort.formatDescription)
+                
+                inputVideoDimensions = NSSize(width: Int(dimensions.width), height: Int(dimensions.height))
+            }
+        }
     }
     
     func startRecording() {
@@ -81,42 +106,24 @@ class CaptureController: NSObject {
         cleanup()
         
         do {
-            let writer = try AVAssetWriter(URL: NSFileManager.defaultManager().applicationTemporaryUniqueFileURL(), fileType: AVFileTypeMPEG4)
-            
-            let videoInput = AVAssetWriterInput(mediaType: AVMediaTypeVideo, outputSettings: outputVideoSettings)
-            videoInput.expectsMediaDataInRealTime = true
-            
-            assert(writer.canAddInput(videoInput))
-            writer.addInput(videoInput)
-            
-            assetWriter = writer
+            movieFileWriter = try CaptureMovieFileWriter(url: NSFileManager.defaultManager().applicationTemporaryUniqueFileURL(), fileType: AVFileTypeMPEG4, videoDimensions: inputVideoDimensions, videoCodec: AVVideoCodecH264)
         } catch let error as NSError {
             BlueScreenOfDeath.show(reason: "Can't create asset writer: \(error.localizedDescription)")
         }
         
-        recording = true
+        movieFileWriter?.startWriting()
     }
     
     func stopRecording() {
-        recording = false
-        
-        guard let writer = assetWriter else {
-            return
-        }
-        
-        for input in writer.inputs {
-            input.markAsFinished()
-        }
-        
-        writer.finishWritingWithCompletionHandler {
+        movieFileWriter?.finishWriting() { error in
             dispatch_async(dispatch_get_main_queue()) {
-                self.delegate?.captureController(self, didFinishRecordingWithError: self.assetWriter?.error)
+                self.delegate?.captureController(self, didFinishRecordingWithError: error)
             }
         }
     }
     
     func exportRecording(destinationURL: NSURL) throws {
-        guard let sourceUrl = assetWriter?.outputURL else {
+        guard let sourceUrl = movieFileWriter?.outputURL else {
             return
         }
         
@@ -130,7 +137,7 @@ class CaptureController: NSObject {
     func cleanup() {
         precondition(!recording)
         
-        if let url = assetWriter?.outputURL {
+        if let url = movieFileWriter?.outputURL {
             do {
                 try NSFileManager.defaultManager().removeItemAtURL(url)
             } catch {
@@ -138,46 +145,43 @@ class CaptureController: NSObject {
             }
         }
         
-        assetWriter = nil
+        movieFileWriter = nil
     }
 
 }
 
-extension CaptureController: AVCaptureVideoDataOutputSampleBufferDelegate {
+extension CaptureController: AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate {
 
     func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
-        delegate?.captureController(self, didOutputSampleBuffer: sampleBuffer)
+        let formatDesc = CMSampleBufferGetFormatDescription(sampleBuffer)!
+        let mediaType = CMFormatDescriptionGetMediaType(formatDesc)
         
-        if let writer = assetWriter where recording {
-            if writer.status != .Writing {
-                writer.startWriting()
-                writer.startSessionAtSourceTime(CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
-            }
-            
-            for input in writer.inputs where input.mediaType == AVMediaTypeVideo {
-                input.appendSampleBuffer(sampleBuffer)
-            }
+        switch mediaType {
+        case kCMMediaType_Video:
+            captureSampleBufferForVideoOutput(sampleBuffer)
+        case kCMMediaType_Audio:
+            captureSampleBufferForAudioOutput(sampleBuffer)
+        default:
+            assert(false)
         }
     }
-
-}
-
-extension NSFileManager {
     
-    func applicationTemporaryDirectoryURL() -> NSURL {
-        let url = NSURL(fileURLWithPath: NSTemporaryDirectory()).URLByAppendingPathComponent(NSProcessInfo.processInfo().processName, isDirectory: true)
-        
-        do {
-            try NSFileManager.defaultManager().createDirectoryAtURL(url, withIntermediateDirectories: true, attributes: nil)
-        } catch {
-            BlueScreenOfDeath.show(reason: "Can't create temporary directory")
+    private func captureSampleBufferForVideoOutput(sampleBuffer: CMSampleBuffer) {
+        guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+            return
         }
         
-        return url
+        let resultImage = effect!.apply(CIImage(CVPixelBuffer: imageBuffer))
+        
+        delegate?.captureController(self, didCaptureFrame: resultImage)
+        
+        if let writer = movieFileWriter where writer.writing {
+            writer.appendFrame(resultImage, withPresentationTime: CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
+        }
     }
     
-    func applicationTemporaryUniqueFileURL() -> NSURL {
-        return applicationTemporaryDirectoryURL().URLByAppendingPathComponent(NSProcessInfo.processInfo().globallyUniqueString)
+    private func captureSampleBufferForAudioOutput(sampleBuffer: CMSampleBuffer) {
+        movieFileWriter?.appendAudioSampleBuffer(sampleBuffer)
     }
-    
+
 }
