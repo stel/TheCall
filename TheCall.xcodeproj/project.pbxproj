@@ -66,7 +66,7 @@
 		0A6D21091C980EA000085A7F /* Saw.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = Saw.mp4; sourceTree = "<group>"; };
 		0A6D210B1C983E5000085A7F /* CallButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallButton.swift; sourceTree = "<group>"; };
 		0A6D210E1C9847AF00085A7F /* RoundPopUpButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RoundPopUpButton.swift; sourceTree = "<group>"; };
-		0AA13ABB1C997EF800C4BE3B /* VideoEffect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = VideoEffect.swift; path = VideoEffects/VideoEffect.swift; sourceTree = "<group>"; };
+		0AA13ABB1C997EF800C4BE3B /* VideoEffect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoEffect.swift; sourceTree = "<group>"; };
 		0AA13ABD1C997F6700C4BE3B /* Blur.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Blur.swift; sourceTree = "<group>"; };
 		0AA13AC01C99AB6000C4BE3B /* NSFileManager+TemporaryURL.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSFileManager+TemporaryURL.swift"; sourceTree = "<group>"; };
 		0AA13AC31C99AEC300C4BE3B /* CaptureMovieFileWriter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CaptureMovieFileWriter.swift; sourceTree = "<group>"; };
@@ -142,10 +142,10 @@
 			isa = PBXGroup;
 			children = (
 				0AA13AC21C99AE9600C4BE3B /* Capture */,
-				0AA13ABF1C99AB3B00C4BE3B /* Extensions */,
 				0AA13ABA1C997EC700C4BE3B /* Effects */,
-				0A6D20EC1C96E97500085A7F /* PlaybackController.swift */,
+				0AA13ABF1C99AB3B00C4BE3B /* Extensions */,
 				0A6D21071C9802B000085A7F /* Errors.swift */,
+				0A6D20EC1C96E97500085A7F /* PlaybackController.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -200,10 +200,10 @@
 		0AA13ABA1C997EC700C4BE3B /* Effects */ = {
 			isa = PBXGroup;
 			children = (
-				0AA13ABB1C997EF800C4BE3B /* VideoEffect.swift */,
 				0AA13ABD1C997F6700C4BE3B /* Blur.swift */,
+				0AA13ABB1C997EF800C4BE3B /* VideoEffect.swift */,
 			);
-			name = Effects;
+			path = Effects;
 			sourceTree = "<group>";
 		};
 		0AA13ABF1C99AB3B00C4BE3B /* Extensions */ = {
@@ -212,7 +212,7 @@
 				0A6D20F01C97264500085A7F /* NSCursor+SystemCursors.swift */,
 				0AA13AC01C99AB6000C4BE3B /* NSFileManager+TemporaryURL.swift */,
 			);
-			name = Extensions;
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 		0AA13AC21C99AE9600C4BE3B /* Capture */ = {
@@ -221,7 +221,7 @@
 				0A6D20E21C96A02300085A7F /* CaptureController.swift */,
 				0AA13AC31C99AEC300C4BE3B /* CaptureMovieFileWriter.swift */,
 			);
-			name = Capture;
+			path = Capture;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
