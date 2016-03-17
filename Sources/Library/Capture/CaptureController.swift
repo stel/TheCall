@@ -32,6 +32,8 @@ class CaptureController: NSObject {
     
     private var movieFileWriter: CaptureMovieFileWriter?
     
+    private let sampleBufferCallbackQueue = dispatch_queue_create("com.dmitry-obukhov.TheCall.SampleBufferCallback", nil)
+    
     override init() {
         let videoDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
         let audioDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeAudio)
@@ -63,13 +65,13 @@ class CaptureController: NSObject {
         }
         
         let videoOutput = AVCaptureVideoDataOutput()
-        videoOutput.setSampleBufferDelegate(self, queue: dispatch_get_main_queue())
+        videoOutput.setSampleBufferDelegate(self, queue: sampleBufferCallbackQueue)
         
         assert(session.canAddOutput(videoOutput))
         session.addOutput(videoOutput)
         
         let audioOutput = AVCaptureAudioDataOutput()
-        audioOutput.setSampleBufferDelegate(self, queue: dispatch_get_main_queue())
+        audioOutput.setSampleBufferDelegate(self, queue: sampleBufferCallbackQueue)
 
         assert(session.canAddOutput(audioOutput))
         session.addOutput(audioOutput)
@@ -189,7 +191,9 @@ extension CaptureController: AVCaptureVideoDataOutputSampleBufferDelegate, AVCap
             resultImage = effect.apply(resultImage)
         }
         
-        delegate?.captureController(self, didCaptureFrame: resultImage)
+        dispatch_async(dispatch_get_main_queue()) {
+            self.delegate?.captureController(self, didCaptureFrame: resultImage)
+        }
         
         if let writer = movieFileWriter where writer.writing {
             writer.appendFrame(resultImage, withPresentationTime: CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
