@@ -12,7 +12,11 @@ import AVFoundation
 class CaptureMovieFileWriter {
     
     private let assetWriter: AVAssetWriter!
-    private let assetWriterInputPixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor
+    
+    private let assetWriterVideoInput: AVAssetWriterInput
+    private let assetWriterVideoInputAdaptor: AVAssetWriterInputPixelBufferAdaptor
+    
+    private let assetWriterAudioInput: AVAssetWriterInput
     
     var outputURL: NSURL {
         return assetWriter.outputURL
@@ -38,15 +42,10 @@ class CaptureMovieFileWriter {
         return CIContext(CGLContext: CGLGetCurrentContext(), pixelFormat: pixelFormat.CGLPixelFormatObj, colorSpace: nil, options: nil)
     }()
 
-    init(url: NSURL, fileType: String, videoDimensions: NSSize, videoCodec: String) throws {
-        let outputVideoSettings: [String: AnyObject] = [
-            AVVideoCodecKey: videoCodec,
-            AVVideoWidthKey: videoDimensions.width,
-            AVVideoHeightKey: videoDimensions.height
-        ]
-        
-        let videoInput = AVAssetWriterInput(mediaType: AVMediaTypeVideo, outputSettings: outputVideoSettings)
-        videoInput.expectsMediaDataInRealTime = true
+    init(url: NSURL, fileType: String, videoDimensions: NSSize, videoSettings: [String: AnyObject]?, audioSettings: [String: AnyObject]?) throws {
+
+        assetWriterVideoInput = AVAssetWriterInput(mediaType: AVMediaTypeVideo, outputSettings: videoSettings)
+        assetWriterVideoInput.expectsMediaDataInRealTime = true
         
         let pixelBufferAttributes = [
             String(kCVPixelBufferPixelFormatTypeKey): Int(kCVPixelFormatType_32BGRA),
@@ -55,8 +54,11 @@ class CaptureMovieFileWriter {
             String(kCVPixelFormatOpenGLCompatibility): kCFBooleanTrue
         ]
         
-        assetWriterInputPixelBufferAdaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: videoInput,
+        assetWriterVideoInputAdaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: assetWriterVideoInput,
             sourcePixelBufferAttributes: pixelBufferAttributes)
+        
+        assetWriterAudioInput = AVAssetWriterInput(mediaType: AVMediaTypeAudio, outputSettings: audioSettings)
+        assetWriterAudioInput.expectsMediaDataInRealTime = true
         
         do {
             assetWriter = try AVAssetWriter(URL: url, fileType: fileType)
@@ -66,8 +68,11 @@ class CaptureMovieFileWriter {
             throw error
         }
         
-        assert(assetWriter.canAddInput(videoInput))
-        assetWriter.addInput(videoInput)
+        assert(assetWriter.canAddInput(assetWriterVideoInput))
+        assetWriter.addInput(assetWriterVideoInput)
+        
+        assert(assetWriter.canAddInput(assetWriterAudioInput))
+        assetWriter.addInput(assetWriterAudioInput)
     }
     
     func startWriting() -> Bool {
@@ -89,7 +94,7 @@ class CaptureMovieFileWriter {
         
         var buffer: CVPixelBuffer? = nil
         
-        if let pool = assetWriterInputPixelBufferAdaptor.pixelBufferPool {
+        if let pool = assetWriterVideoInputAdaptor.pixelBufferPool {
             CVPixelBufferPoolCreatePixelBuffer(nil, pool, &buffer)
         }
         
@@ -107,11 +112,6 @@ class CaptureMovieFileWriter {
 
 extension CaptureMovieFileWriter {
     
-    func appendVideoSampleBuffer(sampleBuffer: CMSampleBuffer) -> Bool {
-        // TODO: call appendBuffer on videoInput instead
-        return appendVideoPixelBuffer(CMSampleBufferGetImageBuffer(sampleBuffer)!, withPresentationTime: CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
-    }
-    
     func appendFrame(image: CIImage, withPresentationTime presentationTime: CMTime) -> Bool {
         startWritingSessionIfNeeded(presentationTime)
         
@@ -125,9 +125,21 @@ extension CaptureMovieFileWriter {
     }
     
     func appendVideoPixelBuffer(pixelBuffer: CVPixelBuffer, withPresentationTime presentationTime: CMTime) -> Bool {
+        guard assetWriterVideoInput.readyForMoreMediaData else {
+            return false
+        }
+        
         startWritingSessionIfNeeded(presentationTime)
         
-        return assetWriterInputPixelBufferAdaptor.appendPixelBuffer(pixelBuffer, withPresentationTime: presentationTime)
+        return assetWriterVideoInputAdaptor.appendPixelBuffer(pixelBuffer, withPresentationTime: presentationTime)
+    }
+    
+    func appendVideoSampleBuffer(sampleBuffer: CMSampleBuffer) -> Bool {
+        guard assetWriterVideoInput.readyForMoreMediaData else {
+            return false
+        }
+        
+        return assetWriterVideoInput.appendSampleBuffer(sampleBuffer)
     }
     
 }
@@ -135,7 +147,12 @@ extension CaptureMovieFileWriter {
 extension CaptureMovieFileWriter {
     
     func appendAudioSampleBuffer(sampleBuffer: CMSampleBuffer) -> Bool {
-        return false
+        // TODO: find a way to sync audio/video capture, currently session will be started by the video input
+        guard assetWriterAudioInput.readyForMoreMediaData && writingSessionStarted else {
+            return false
+        }
+        
+        return assetWriterAudioInput.appendSampleBuffer(sampleBuffer)
     }
     
 }

@@ -68,12 +68,11 @@ class CaptureController: NSObject {
         assert(session.canAddOutput(videoOutput))
         session.addOutput(videoOutput)
         
-        // TODO: Implement
-//        let audioOutput = AVCaptureAudioDataOutput()
-//        audioOutput.setSampleBufferDelegate(self, queue: dispatch_get_main_queue())
-//
-//        assert(session.canAddOutput(audioOutput))
-//        session.addOutput(audioOutput)
+        let audioOutput = AVCaptureAudioDataOutput()
+        audioOutput.setSampleBufferDelegate(self, queue: dispatch_get_main_queue())
+
+        assert(session.canAddOutput(audioOutput))
+        session.addOutput(audioOutput)
         
         session.commitConfiguration()
         
@@ -106,7 +105,20 @@ class CaptureController: NSObject {
         cleanup()
         
         do {
-            movieFileWriter = try CaptureMovieFileWriter(url: NSFileManager.defaultManager().applicationTemporaryUniqueFileURL(), fileType: AVFileTypeMPEG4, videoDimensions: inputVideoDimensions, videoCodec: AVVideoCodecH264)
+            let videoSettings: [String: AnyObject] = [
+                AVVideoCodecKey: AVVideoCodecH264,
+                AVVideoWidthKey: inputVideoDimensions.width,
+                AVVideoHeightKey: inputVideoDimensions.height
+            ]
+            
+            let audioSettings: [String: AnyObject] = [
+                AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                AVNumberOfChannelsKey: 1,
+                AVSampleRateKey: 44100,
+                AVEncoderBitRateKey: 64000
+            ]
+            
+            movieFileWriter = try CaptureMovieFileWriter(url: NSFileManager.defaultManager().applicationTemporaryUniqueFileURL(), fileType: AVFileTypeMPEG4, videoDimensions: inputVideoDimensions, videoSettings: videoSettings, audioSettings: audioSettings)
         } catch let error as NSError {
             BlueScreenOfDeath.show(reason: "Can't create asset writer: \(error.localizedDescription)")
         }
